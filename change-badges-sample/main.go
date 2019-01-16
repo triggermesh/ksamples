@@ -6,6 +6,7 @@ import (
 	"fmt"
 
 	"github.com/aws/aws-lambda-go/lambda"
+	"github.com/sirupsen/logrus"
 )
 
 type SubscriptionMessage struct {
@@ -28,6 +29,16 @@ func HandleRequest(ctx context.Context, sm SubscriptionMessage) (string, error) 
 	sDec, err := b64.StdEncoding.DecodeString(sm.Message.Data)
 	if err != nil {
 		return err.Error(), nil
+	}
+
+	if sm.Message.Attributes.Status == "SUCCESS" {
+		logrus.Info("Detected build success!")
+
+	}
+
+	if sm.Message.Attributes.Status == "FAILURE" {
+		logrus.Info("Detected build failure!")
+
 	}
 
 	return fmt.Sprintf("Build status: %s, data: %s", sm.Message.Attributes.Status, string(sDec)), nil
