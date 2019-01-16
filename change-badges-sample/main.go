@@ -5,7 +5,6 @@ import (
 	b64 "encoding/base64"
 	"fmt"
 	"io"
-	"log"
 	"os"
 
 	"cloud.google.com/go/storage"
@@ -43,7 +42,8 @@ func HandleRequest(ctx context.Context, sm SubscriptionMessage) (string, error) 
 	// Creates a client.
 	client, err := storage.NewClient(ctx)
 	if err != nil {
-		log.Fatalf("Failed to create client: %v", err)
+		logrus.Fatalf("Failed to create client: %v", err)
+		return "", err
 	}
 
 	// Sets the name for the new bucket.
@@ -57,15 +57,18 @@ func HandleRequest(ctx context.Context, sm SubscriptionMessage) (string, error) 
 
 		f, err := os.Open("build/success.svg")
 		if err != nil {
+			logrus.Error(err)
 			return "", err
 		}
 		defer f.Close()
 
 		wc := bucket.Object(filename).NewWriter(ctx)
 		if _, err = io.Copy(wc, f); err != nil {
+			logrus.Error(err)
 			return "", err
 		}
 		if err := wc.Close(); err != nil {
+			logrus.Error(err)
 			return "", err
 		}
 
@@ -73,6 +76,7 @@ func HandleRequest(ctx context.Context, sm SubscriptionMessage) (string, error) 
 
 		acl := bucket.Object(filename).ACL()
 		if err := acl.Set(ctx, storage.AllUsers, storage.RoleReader); err != nil {
+			logrus.Error(err)
 			return "", err
 		}
 		logrus.Info("Badge set to public")
@@ -83,15 +87,18 @@ func HandleRequest(ctx context.Context, sm SubscriptionMessage) (string, error) 
 
 		f, err := os.Open("build/failure.svg")
 		if err != nil {
+			logrus.Error(err)
 			return "", err
 		}
 		defer f.Close()
 
 		wc := bucket.Object(filename).NewWriter(ctx)
 		if _, err = io.Copy(wc, f); err != nil {
+			logrus.Error(err)
 			return "", err
 		}
 		if err := wc.Close(); err != nil {
+			logrus.Error(err)
 			return "", err
 		}
 
@@ -99,6 +106,7 @@ func HandleRequest(ctx context.Context, sm SubscriptionMessage) (string, error) 
 
 		acl := bucket.Object(filename).ACL()
 		if err := acl.Set(ctx, storage.AllUsers, storage.RoleReader); err != nil {
+			logrus.Error(err)
 			return "", err
 		}
 
