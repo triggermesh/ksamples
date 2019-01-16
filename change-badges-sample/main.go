@@ -69,10 +69,13 @@ func HandleRequest(ctx context.Context, sm SubscriptionMessage) (string, error) 
 			return "", err
 		}
 
+		logrus.Info("Switched badge to build success")
+
 		acl := bucket.Object(filename).ACL()
 		if err := acl.Set(ctx, storage.AllUsers, storage.RoleReader); err != nil {
 			return "", err
 		}
+		logrus.Info("Badge set to public")
 	}
 
 	if sm.Message.Attributes.Status == "FAILURE" {
@@ -92,10 +95,14 @@ func HandleRequest(ctx context.Context, sm SubscriptionMessage) (string, error) 
 			return "", err
 		}
 
+		logrus.Info("Switched badge to build failure")
+
 		acl := bucket.Object(filename).ACL()
 		if err := acl.Set(ctx, storage.AllUsers, storage.RoleReader); err != nil {
 			return "", err
 		}
+
+		logrus.Info("Badge set to public")
 	}
 
 	return fmt.Sprintf("Build status: %s, data: %s", sm.Message.Attributes.Status, string(sDec)), nil
