@@ -4,8 +4,6 @@ import (
 	"context"
 	b64 "encoding/base64"
 	"fmt"
-	"io"
-	"os"
 
 	"cloud.google.com/go/storage"
 	"github.com/aws/aws-lambda-go/lambda"
@@ -47,7 +45,7 @@ func HandleRequest(ctx context.Context, sm SubscriptionMessage) (string, error) 
 	}
 
 	// Sets the name for the new bucket.
-	bucketName := "my-new-bucket"
+	bucketName := "triggermeshtestprojectbucket"
 
 	// Creates a Bucket instance.
 	bucket := client.Bucket(bucketName)
@@ -55,20 +53,10 @@ func HandleRequest(ctx context.Context, sm SubscriptionMessage) (string, error) 
 	if sm.Message.Attributes.Status == "SUCCESS" {
 		logrus.Info("Detected build success!")
 
-		f, err := os.Open("build/success.svg")
-		if err != nil {
-			logrus.Error(err)
-			return "", err
-		}
-		defer f.Close()
+		src := bucket.Object("build/success.svg")
+		dst := bucket.Object(filename)
 
-		wc := bucket.Object(filename).NewWriter(ctx)
-		if _, err = io.Copy(wc, f); err != nil {
-			logrus.Error(err)
-			return "", err
-		}
-		if err := wc.Close(); err != nil {
-			logrus.Error(err)
+		if _, err := dst.CopierFrom(src).Run(ctx); err != nil {
 			return "", err
 		}
 
@@ -85,20 +73,10 @@ func HandleRequest(ctx context.Context, sm SubscriptionMessage) (string, error) 
 	if sm.Message.Attributes.Status == "FAILURE" {
 		logrus.Info("Detected build failure!")
 
-		f, err := os.Open("build/failure.svg")
-		if err != nil {
-			logrus.Error(err)
-			return "", err
-		}
-		defer f.Close()
+		src := bucket.Object("build/failure.svg")
+		dst := bucket.Object(filename)
 
-		wc := bucket.Object(filename).NewWriter(ctx)
-		if _, err = io.Copy(wc, f); err != nil {
-			logrus.Error(err)
-			return "", err
-		}
-		if err := wc.Close(); err != nil {
-			logrus.Error(err)
+		if _, err := dst.CopierFrom(src).Run(ctx); err != nil {
 			return "", err
 		}
 
