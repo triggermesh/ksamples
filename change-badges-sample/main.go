@@ -29,30 +29,29 @@ type Attributes struct {
 
 type Base64EncodedPubSubMessage string
 
-func HandleRequest(ctx context.Context, pubsubMessage Base64EncodedPubSubMessage) (string, error) {
+func Handler() error {
 
-	// message := `{"message": {"attributes": {"buildId": "","status": "SUCCESS"}, "data": "SGVsbG8gQ2xvdWQgUHViL1N1YiEgSGVyZSBpcyBteSBtZXNzYWdlIQ==", "message_id": "136969346945"}, "subscription": "projects/myproject/subscriptions/mysubscription"}`
-	// var data SubscriptionMessage
-	// sEnc := base64.StdEncoding.EncodeToString([]byte(message))
+	message := `{"message": {"attributes": {"buildId": "","status": "SUCCESS"}, "data": "SGVsbG8gQ2xvdWQgUHViL1N1YiEgSGVyZSBpcyBteSBtZXNzYWdlIQ==", "message_id": "136969346945"}, "subscription": "projects/myproject/subscriptions/mysubscription"}`
+	var data SubscriptionMessage
+	sEnc := base64.StdEncoding.EncodeToString([]byte(message))
 
-	googlePubSubMessage, err := base64.StdEncoding.DecodeString(string(pubsubMessage))
+	googlePubSubMessage, err := base64.StdEncoding.DecodeString(string(sEnc))
 	if err != nil {
-		logrus.Fatal(err)
+		return err
 	}
 
-	var data SubscriptionMessage
 	err = json.Unmarshal([]byte(googlePubSubMessage), &data)
 	if err != nil {
-		logrus.Fatal(err)
+		return err
 	}
 
 	// Need to check if this context is better used
-	//ctx := context.Background()
+	ctx := context.Background()
 
 	// Creates a client.
 	client, err := storage.NewClient(ctx)
 	if err != nil {
-		logrus.Fatalf("Failed to create client: %v", err)
+		return err
 	}
 
 	// Sets the name for the new bucket.
@@ -73,14 +72,14 @@ func HandleRequest(ctx context.Context, pubsubMessage Base64EncodedPubSubMessage
 		dst := bucket.Object(filename)
 
 		if _, err := dst.CopierFrom(src).Run(ctx); err != nil {
-			logrus.Fatal(err)
+			return err
 		}
 
 		logrus.Info("Switched badge to build success")
 
 		acl := bucket.Object(filename).ACL()
 		if err := acl.Set(ctx, storage.AllUsers, storage.RoleReader); err != nil {
-			logrus.Error(err)
+			return err
 		}
 		logrus.Info("Badge set to public")
 	}
@@ -92,20 +91,22 @@ func HandleRequest(ctx context.Context, pubsubMessage Base64EncodedPubSubMessage
 		dst := bucket.Object(filename)
 
 		if _, err := dst.CopierFrom(src).Run(ctx); err != nil {
-			logrus.Error(err)
+			return err
 		}
 
 		logrus.Info("Switched badge to build failure")
 
 		acl := bucket.Object(filename).ACL()
 		if err := acl.Set(ctx, storage.AllUsers, storage.RoleReader); err != nil {
-			logrus.Error(err)
+			return err
 		}
 
 		logrus.Info("Badge set to public")
 	}
+
+	return nil
 }
 
 func main() {
-	lambda.Start(HandleRequest)
+	lambda.Start(Handler)
 }
