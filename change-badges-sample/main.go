@@ -30,6 +30,9 @@ type Attributes struct {
 
 func Handler() error {
 
+	env := os.Getenv("ENV")
+	fmt.Println(env)
+
 	creds, err := base64.StdEncoding.DecodeString(os.Getenv("CREDENTIALS"))
 	if err != nil {
 		return err
@@ -66,7 +69,7 @@ func Handler() error {
 	fmt.Println("Client Created")
 
 	// Creates a Bucket instance.
-	bucket := client.Bucket("tmbadges")
+	bucket := client.Bucket(os.Getenv("BUCKET"))
 
 	repo := "testRepo" // with test repo name. Real will be obtained from data after the test with real life data
 	branch := "master" // with test repo branch. Real will be obtained from data after the test with real life data
