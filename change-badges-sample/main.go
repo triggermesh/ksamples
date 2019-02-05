@@ -5,10 +5,11 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
+	"io/ioutil"
+	"os"
 
 	"cloud.google.com/go/storage"
 	"github.com/aws/aws-lambda-go/lambda"
-	"github.com/sirupsen/logrus"
 )
 
 type SubscriptionMessage struct {
@@ -27,46 +28,53 @@ type Attributes struct {
 	Status  string `json: "status"`
 }
 
-type Base64EncodedPubSubMessage string
-
 func Handler() error {
 
-	message := `{"message": {"attributes": {"buildId": "","status": "SUCCESS"}, "data": "SGVsbG8gQ2xvdWQgUHViL1N1YiEgSGVyZSBpcyBteSBtZXNzYWdlIQ==", "message_id": "136969346945"}, "subscription": "projects/myproject/subscriptions/mysubscription"}`
+	creds, err := base64.StdEncoding.DecodeString(os.Getenv("CREDENTIALS"))
+	if err != nil {
+		return err
+	}
+
+	//Set env variable to a file to be created
+	os.Setenv("GOOGLE_APPLICATION_CREDENTIALS", "creds.json")
+
+	err = ioutil.WriteFile("creds.json", []byte(creds), 0644)
+	if err != nil {
+		return err
+	}
+
 	var data SubscriptionMessage
-	sEnc := base64.StdEncoding.EncodeToString([]byte(message))
+	//test message to try create a badge
+	message := `{"message": {"attributes": {"buildId": "","status": "SUCCESS"}, "data": "SGVsbG8gQ2xvdWQgUHViL1N1YiEgSGVyZSBpcyBteSBtZXNzYWdlIQ==", "message_id": "136969346945"}, "subscription": "projects/myproject/subscriptions/mysubscription"}`
 
-	googlePubSubMessage, err := base64.StdEncoding.DecodeString(string(sEnc))
+	err = json.Unmarshal([]byte(message), &data)
 	if err != nil {
 		return err
 	}
 
-	err = json.Unmarshal([]byte(googlePubSubMessage), &data)
-	if err != nil {
-		return err
-	}
+	fmt.Println("Message: ", data)
 
-	// Need to check if this context is better used
 	ctx := context.Background()
 
+	fmt.Println("Context Created")
 	// Creates a client.
 	client, err := storage.NewClient(ctx)
 	if err != nil {
 		return err
 	}
 
-	// Sets the name for the new bucket.
-	bucketName := "anatoliybucket"
+	fmt.Println("Client Created")
 
 	// Creates a Bucket instance.
-	bucket := client.Bucket(bucketName)
+	bucket := client.Bucket("tmbadges")
 
-	repo := "testRepo"     // with test repo name. Real will be obtained from data after the test with real life data
-	branch := "testBranch" // with test repo branch. Real will be obtained from data after the test with real life data
+	repo := "testRepo" // with test repo name. Real will be obtained from data after the test with real life data
+	branch := "master" // with test repo branch. Real will be obtained from data after the test with real life data
 
 	filename := fmt.Sprintf("build/%s-%s.svg", repo, branch)
 
 	if data.Message.Attributes.Status == "SUCCESS" {
-		logrus.Info("Detected build success!")
+		fmt.Println("Detected build success!")
 
 		src := bucket.Object("build/success.svg")
 		dst := bucket.Object(filename)
@@ -75,17 +83,17 @@ func Handler() error {
 			return err
 		}
 
-		logrus.Info("Switched badge to build success")
+		fmt.Println("Switched badge to build success")
 
 		acl := bucket.Object(filename).ACL()
 		if err := acl.Set(ctx, storage.AllUsers, storage.RoleReader); err != nil {
 			return err
 		}
-		logrus.Info("Badge set to public")
+		fmt.Println("Badge set to public")
 	}
 
 	if data.Message.Attributes.Status == "FAILURE" {
-		logrus.Info("Detected build failure!")
+		fmt.Println("Detected build failure!")
 
 		src := bucket.Object("build/failure.svg")
 		dst := bucket.Object(filename)
@@ -94,14 +102,14 @@ func Handler() error {
 			return err
 		}
 
-		logrus.Info("Switched badge to build failure")
+		fmt.Println("Switched badge to build failure")
 
 		acl := bucket.Object(filename).ACL()
 		if err := acl.Set(ctx, storage.AllUsers, storage.RoleReader); err != nil {
 			return err
 		}
 
-		logrus.Info("Badge set to public")
+		fmt.Println("Badge set to public")
 	}
 
 	return nil
