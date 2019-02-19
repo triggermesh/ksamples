@@ -99,9 +99,6 @@ func (ssd *SpreadsheetDumper) ServeHTTP(w http.ResponseWriter, r *http.Request) 
 
 	myval := []interface{}{}
 
-	resp := ssd.Sheets.Spreadsheets.Values.Get(spreadsheetID, "A1")
-	log.Info(resp)
-
 	for _, v := range event.Dynamodb.NewImage {
 		log.Info(v.String())
 
