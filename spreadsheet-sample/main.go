@@ -97,7 +97,7 @@ func (ssd *SpreadsheetDumper) ServeHTTP(w http.ResponseWriter, r *http.Request) 
 
 	var vr sheets.ValueRange
 
-	myval := []interface{}{*event.AwsRegion, *event.EventID, *event.EventName}
+	myval := []interface{}{*event.Dynamodb.Keys["id"].N}
 
 	vr.Values = append(vr.Values, myval)
 
