@@ -4,16 +4,18 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
-	"log"
 	"net/http"
 	"os"
 
 	"github.com/aws/aws-sdk-go/service/dynamodbstreams"
+	log "github.com/sirupsen/logrus"
 	"golang.org/x/net/context"
 	"golang.org/x/oauth2"
 	"golang.org/x/oauth2/google"
 	"google.golang.org/api/sheets/v4"
 )
+
+var spreadsheetID string
 
 type SpreadsheetDumper struct {
 	Sheets *sheets.Service
@@ -93,11 +95,40 @@ func (ssd *SpreadsheetDumper) ServeHTTP(w http.ResponseWriter, r *http.Request) 
 		panic(err)
 	}
 
-	spreadsheetID := os.Getenv("SPREADSHEET_ID")
-
 	var vr sheets.ValueRange
 
-	myval := []interface{}{*event.Dynamodb.Keys["id"].N}
+	myval := []interface{}{}
+
+	resp := ssd.Sheets.Spreadsheets.Values.Get(spreadsheetID, "A1")
+	log.Info(resp)
+
+	for _, v := range event.Dynamodb.NewImage {
+		log.Info(v.String())
+
+		if v.B != nil {
+			myval = append(myval, v.B)
+		} else if v.BOOL != nil {
+			myval = append(myval, *v.BOOL)
+		} else if v.BS != nil {
+			myval = append(myval, v.BS)
+		} else if v.L != nil {
+			myval = append(myval, v.L)
+		} else if v.M != nil {
+			myval = append(myval, v.M)
+		} else if v.N != nil {
+			myval = append(myval, *v.N)
+		} else if v.NS != nil {
+			myval = append(myval, v.NS)
+		} else if v.NULL != nil {
+			myval = append(myval, *v.NULL)
+		} else if v.S != nil {
+			myval = append(myval, *v.S)
+		} else if v.SS != nil {
+			myval = append(myval, v.BS)
+		}
+	}
+
+	log.Info(myval)
 
 	vr.Values = append(vr.Values, myval)
 
@@ -109,6 +140,8 @@ func (ssd *SpreadsheetDumper) ServeHTTP(w http.ResponseWriter, r *http.Request) 
 }
 
 func main() {
+
+	spreadsheetID = os.Getenv("SPREADSHEET_ID")
 
 	b, err := ioutil.ReadFile("credentials.json")
 	if err != nil {
@@ -126,6 +159,9 @@ func main() {
 	if err != nil {
 		log.Fatalf("Unable to retrieve Sheets client: %v", err)
 	}
+
+	resp := srv.Spreadsheets.Values.Get(spreadsheetID, "A1:A5")
+	log.Info(resp)
 
 	log.Fatal(http.ListenAndServe(":8080", &SpreadsheetDumper{srv}))
 
