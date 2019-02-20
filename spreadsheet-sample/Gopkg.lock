@@ -10,7 +10,7 @@
   version = "v0.36.0"
 
 [[projects]]
-  digest = "1:1c86051c0a7d05488287a822ebc371f434b01d6362ae37a5ec73ff749c8af56f"
+  digest = "1:5765751d31ccd84a58d1bfee21f7cb39f2f4c361e6e26dd0c7ac6fac53f1acef"
   name = "github.com/aws/aws-sdk-go"
   packages = [
     "aws",
@@ -35,8 +35,8 @@
     "service/dynamodbstreams",
   ]
   pruneopts = "UT"
-  revision = "33f1087245887dc9a8090de089808120b299bbec"
-  version = "v1.17.0"
+  revision = "de216d45a3df361a2f571b8eb88db86f2b50d82f"
+  version = "v1.17.1"
 
 [[projects]]
   digest = "1:97df918963298c287643883209a2c3f642e6593379f97ab400c2a2e219ab647d"
@@ -54,6 +54,30 @@
   revision = "c2b33e84"
 
 [[projects]]
+  digest = "1:0a69a1c0db3591fcefb47f115b224592c8dfa4368b7ba9fae509d5e16cdc95c8"
+  name = "github.com/konsorten/go-windows-terminal-sequences"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "5c8c8bd35d3832f5d134ae1e1e375b69a4d25242"
+  version = "v1.0.1"
+
+[[projects]]
+  digest = "1:87c2e02fb01c27060ccc5ba7c5a407cc91147726f8f40b70cceeedbc52b1f3a8"
+  name = "github.com/sirupsen/logrus"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "e1e72e9de974bd926e5c56f83753fba2df402ce5"
+  version = "v1.3.0"
+
+[[projects]]
+  branch = "master"
+  digest = "1:fde12c4da6237363bf36b81b59aa36a43d28061167ec4acb0d41fc49464e28b9"
+  name = "golang.org/x/crypto"
+  packages = ["ssh/terminal"]
+  pruneopts = "UT"
+  revision = "a4c6cb3142f211c99e4bf4cd769535b29a9b616f"
+
+[[projects]]
   branch = "master"
   digest = "1:f8b491a7c25030a895a0e579742d07136e6958e77ef2d46e769db8eec4e58fcd"
   name = "golang.org/x/net"
@@ -66,7 +90,7 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:1540fd815845f20e31cb95c3b6f7f0f0c8880c3d053845ba4a4a609539446bf6"
+  digest = "1:5ad74f12915c42f549f8ef81c1e508c0420dc3662a0f63a28a0ea64999b8d5a3"
   name = "golang.org/x/oauth2"
   packages = [
     ".",
@@ -76,7 +100,18 @@
     "jwt",
   ]
   pruneopts = "UT"
-  revision = "3e8b2be1363542a95c52ea0796d4a40dacfb5b95"
+  revision = "4b83411ed2b36bd4e3302e9b1d3c973fb1ba24db"
+
+[[projects]]
+  branch = "master"
+  digest = "1:0d703f14f9bbbe1070ff0ce86d749dcbc9d68fb0ae554252c09bd4bb37a072e7"
+  name = "golang.org/x/sys"
+  packages = [
+    "unix",
+    "windows",
+  ]
+  pruneopts = "UT"
+  revision = "90b0e4468f9980bf79a2290394adaf7f045c5d24"
 
 [[projects]]
   digest = "1:fd78c4f6482e277b720badac057b2d4312779120b45625051529107afc117a71"
@@ -115,8 +150,8 @@
   analyzer-version = 1
   input-imports = [
     "github.com/aws/aws-sdk-go/service/dynamodbstreams",
+    "github.com/sirupsen/logrus",
     "golang.org/x/net/context",
-    "golang.org/x/oauth2",
     "golang.org/x/oauth2/google",
     "google.golang.org/api/sheets/v4",
   ]

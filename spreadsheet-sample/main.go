@@ -1,7 +1,10 @@
 package main
 
 import (
+	"encoding/base64"
 	"encoding/json"
+	"fmt"
+	"io/ioutil"
 	"net/http"
 	"os"
 
@@ -81,6 +84,24 @@ func (ssd *SpreadsheetDumper) ServeHTTP(w http.ResponseWriter, r *http.Request) 
 func main() {
 
 	spreadsheetID = os.Getenv("SPREADSHEET_ID")
+	_, ok := os.LookupEnv("GOOGLE_APPLICATION_CREDENTIALS")
+
+	if !ok {
+		env := os.Getenv("ENV")
+		fmt.Println(env)
+
+		creds, err := base64.StdEncoding.DecodeString(os.Getenv("CREDENTIALS"))
+		if err != nil {
+			log.Error(err)
+		}
+
+		err = ioutil.WriteFile("credentials.json", []byte(creds), 0644)
+		if err != nil {
+			log.Error(err)
+		}
+
+		os.Setenv("GOOGLE_APPLICATION_CREDENTIALS", "credentials.json")
+	}
 
 	ctx := context.Background()
 
@@ -93,6 +114,8 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
+
+	log.Info("Authorized via service account. Listen for DynamoDB events!")
 
 	log.Fatal(http.ListenAndServe(":8080", &SpreadsheetDumper{srv}))
 }
