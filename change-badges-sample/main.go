@@ -2,14 +2,13 @@ package main
 
 import (
 	"context"
-	"encoding/base64"
-	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"os"
 
 	"cloud.google.com/go/storage"
 	"github.com/aws/aws-lambda-go/lambda"
+	log "github.com/sirupsen/logrus"
 )
 
 type SubscriptionMessage struct {
@@ -28,48 +27,45 @@ type Attributes struct {
 	Status  string `json: "status"`
 }
 
-func Handler() error {
+func Handler(ctx context.Context, data SubscriptionMessage) error {
 
-	env := os.Getenv("ENV")
-	fmt.Println(env)
+	bucketName := os.Getenv("BUCKET")
+	log.Info("Current bucket: ", bucketName)
 
-	creds, err := base64.StdEncoding.DecodeString(os.Getenv("CREDENTIALS"))
-	if err != nil {
-		return err
+	_, ok := os.LookupEnv("GOOGLE_APPLICATION_CREDENTIALS")
+
+	if !ok {
+		fmt.Println("Unable to find GOOGLE_APPLICATION_CREDENTIALS env var. Creating it locally")
+
+		credentials := os.Getenv("CREDENTIALS")
+
+		log.Info(credentials)
+
+		err := ioutil.WriteFile("credentials.json", []byte(credentials), 0644)
+		if err != nil {
+			return err
+		}
+
+		os.Setenv("GOOGLE_APPLICATION_CREDENTIALS", "credentials.json")
 	}
 
-	//Set env variable to a file to be created
-	os.Setenv("GOOGLE_APPLICATION_CREDENTIALS", "creds.json")
+	log.Info("Configured env variables and google credentials!")
 
-	err = ioutil.WriteFile("creds.json", []byte(creds), 0644)
-	if err != nil {
-		return err
-	}
+	ctx = context.Background()
 
-	var data SubscriptionMessage
-	//test message to try create a badge
-	message := `{"message": {"attributes": {"buildId": "","status": "SUCCESS"}, "data": "SGVsbG8gQ2xvdWQgUHViL1N1YiEgSGVyZSBpcyBteSBtZXNzYWdlIQ==", "message_id": "136969346945"}, "subscription": "projects/myproject/subscriptions/mysubscription"}`
-
-	err = json.Unmarshal([]byte(message), &data)
-	if err != nil {
-		return err
-	}
-
-	fmt.Println("Message: ", data)
-
-	ctx := context.Background()
-
-	fmt.Println("Context Created")
 	// Creates a client.
 	client, err := storage.NewClient(ctx)
 	if err != nil {
 		return err
 	}
 
-	fmt.Println("Client Created")
+	log.Info("Client Created")
 
 	// Creates a Bucket instance.
-	bucket := client.Bucket(os.Getenv("BUCKET"))
+	bucket := client.Bucket(bucketName)
+
+	log.Info("Bucket: ", bucket)
+	log.Info("data: ", data)
 
 	repo := "testRepo" // with test repo name. Real will be obtained from data after the test with real life data
 	branch := "master" // with test repo branch. Real will be obtained from data after the test with real life data
@@ -77,7 +73,7 @@ func Handler() error {
 	filename := fmt.Sprintf("build/%s-%s.svg", repo, branch)
 
 	if data.Message.Attributes.Status == "SUCCESS" {
-		fmt.Println("Detected build success!")
+		log.Info("Detected build success!")
 
 		src := bucket.Object("build/success.svg")
 		dst := bucket.Object(filename)
@@ -86,17 +82,17 @@ func Handler() error {
 			return err
 		}
 
-		fmt.Println("Switched badge to build success")
+		log.Info("Switched badge to build success")
 
 		acl := bucket.Object(filename).ACL()
 		if err := acl.Set(ctx, storage.AllUsers, storage.RoleReader); err != nil {
 			return err
 		}
-		fmt.Println("Badge set to public")
+		log.Info("Badge set to public")
 	}
 
 	if data.Message.Attributes.Status == "FAILURE" {
-		fmt.Println("Detected build failure!")
+		log.Info("Detected build failure!")
 
 		src := bucket.Object("build/failure.svg")
 		dst := bucket.Object(filename)
@@ -105,14 +101,14 @@ func Handler() error {
 			return err
 		}
 
-		fmt.Println("Switched badge to build failure")
+		log.Info("Switched badge to build failure")
 
 		acl := bucket.Object(filename).ACL()
 		if err := acl.Set(ctx, storage.AllUsers, storage.RoleReader); err != nil {
 			return err
 		}
 
-		fmt.Println("Badge set to public")
+		log.Info("Badge set to public")
 	}
 
 	return nil

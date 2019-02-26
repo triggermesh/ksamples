@@ -1,7 +1,6 @@
 package main
 
 import (
-	"encoding/base64"
 	"fmt"
 	"io/ioutil"
 	"os"
@@ -28,24 +27,27 @@ type DynamoDBEvent struct {
 func Handler(ctx context.Context, event DynamoDBEvent) error {
 
 	spreadsheetID := os.Getenv("SPREADSHEET_ID")
+	log.Info("Current spreadsheet id: ", spreadsheetID)
+
 	_, ok := os.LookupEnv("GOOGLE_APPLICATION_CREDENTIALS")
 
 	if !ok {
-		env := os.Getenv("ENV")
-		fmt.Println(env)
+		fmt.Println("Unable to find GOOGLE_APPLICATION_CREDENTIALS env var. Creating it locally")
 
-		creds, err := base64.StdEncoding.DecodeString(os.Getenv("CREDENTIALS"))
-		if err != nil {
-			log.Error(err)
-		}
+		credentials := os.Getenv("CREDENTIALS")
 
-		err = ioutil.WriteFile("credentials.json", []byte(creds), 0644)
+		log.Info("Credentials: \n")
+		log.Info(credentials)
+
+		err := ioutil.WriteFile("credentials.json", []byte(credentials), 0644)
 		if err != nil {
-			log.Error(err)
+			log.Fatal(err)
 		}
 
 		os.Setenv("GOOGLE_APPLICATION_CREDENTIALS", "credentials.json")
 	}
+
+	log.Info("Configured env variables and google credentials!")
 
 	ctx = context.Background()
 
@@ -53,6 +55,8 @@ func Handler(ctx context.Context, event DynamoDBEvent) error {
 	if err != nil {
 		return err
 	}
+
+	log.Info("Created Google Default client")
 
 	srv, err := sheets.New(client)
 	if err != nil {
@@ -91,7 +95,7 @@ func Handler(ctx context.Context, event DynamoDBEvent) error {
 		}
 	}
 
-	log.Info(myval)
+	log.Info("Adding new value to the spreadsheet: ", myval)
 
 	vr.Values = append(vr.Values, myval)
 
