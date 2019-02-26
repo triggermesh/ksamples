@@ -11,23 +11,16 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-type SubscriptionMessage struct {
-	Message      Message `json: "message"`
-	Subscription string  `json: "subscription"`
+//PubSubMessage struct taken from https://cloud.google.com/pubsub/docs/reference/rest/v1/PubsubMessage
+type PubSubMessage struct {
+	Attributes  map[string]string `json:"attributes"`
+	Data        string            `json:"data"`
+	MessageID   int               `json:"messageId"`
+	PublishTime string            `json:"publishTime"`
 }
 
-type Message struct {
-	Attributes Attributes `json: "attributes"`
-	Data       string     `json: "data"`
-	MessageID  int        `json: "message_id"`
-}
-
-type Attributes struct {
-	BuildID string `json: "buildId"`
-	Status  string `json: "status"`
-}
-
-func Handler(ctx context.Context, data SubscriptionMessage) error {
+//Handler handles events from GpcPubSub source
+func Handler(ctx context.Context, message PubSubMessage) error {
 
 	bucketName := os.Getenv("BUCKET")
 	log.Info("Current bucket: ", bucketName)
@@ -65,14 +58,14 @@ func Handler(ctx context.Context, data SubscriptionMessage) error {
 	bucket := client.Bucket(bucketName)
 
 	log.Info("Bucket: ", bucket)
-	log.Info("data: ", data)
+	log.Info("data: ", message)
 
 	repo := "testRepo" // with test repo name. Real will be obtained from data after the test with real life data
 	branch := "master" // with test repo branch. Real will be obtained from data after the test with real life data
 
 	filename := fmt.Sprintf("build/%s-%s.svg", repo, branch)
 
-	if data.Message.Attributes.Status == "SUCCESS" {
+	if message.Attributes["status"] == "SUCCESS" {
 		log.Info("Detected build success!")
 
 		src := bucket.Object("build/success.svg")
@@ -91,7 +84,7 @@ func Handler(ctx context.Context, data SubscriptionMessage) error {
 		log.Info("Badge set to public")
 	}
 
-	if data.Message.Attributes.Status == "FAILURE" {
+	if message.Attributes["status"] == "FAILURE" {
 		log.Info("Detected build failure!")
 
 		src := bucket.Object("build/failure.svg")
