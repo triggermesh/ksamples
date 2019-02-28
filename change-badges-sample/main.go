@@ -1,7 +1,24 @@
+/*
+Copyright (c) 2019 TriggerMesh, Inc
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+   http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+*/
+
 package main
 
 import (
 	"context"
+	"encoding/base64"
+	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"os"
@@ -11,12 +28,22 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-//PubSubMessage struct taken from https://cloud.google.com/pubsub/docs/reference/rest/v1/PubsubMessage
 type PubSubMessage struct {
 	Attributes  map[string]string `json:"attributes"`
 	Data        string            `json:"data"`
-	MessageID   int               `json:"messageId"`
+	ID          int               `json:"ID"`
 	PublishTime string            `json:"publishTime"`
+}
+
+type PubSubPayload struct {
+	Status string
+	Source struct {
+		RepoSource struct {
+			ProjectID  string
+			RepoName   string
+			BranchName string
+		}
+	}
 }
 
 //Handler handles events from GpcPubSub source
@@ -57,11 +84,13 @@ func Handler(ctx context.Context, message PubSubMessage) error {
 	// Creates a Bucket instance.
 	bucket := client.Bucket(bucketName)
 
-	log.Info("Bucket: ", bucket)
-	log.Info("data: ", message)
+	payload, err := parseData(message.Data)
+	if err != nil {
+		return err
+	}
 
-	repo := "testRepo" // with test repo name. Real will be obtained from data after the test with real life data
-	branch := "master" // with test repo branch. Real will be obtained from data after the test with real life data
+	repo := payload.Source.RepoSource.RepoName
+	branch := payload.Source.RepoSource.BranchName
 
 	filename := fmt.Sprintf("build/%s-%s.svg", repo, branch)
 
@@ -105,6 +134,22 @@ func Handler(ctx context.Context, message PubSubMessage) error {
 	}
 
 	return nil
+}
+
+func parseData(str string) (PubSubPayload, error) {
+	var eventPayload PubSubPayload
+
+	data, err := base64.StdEncoding.DecodeString(str)
+	if err != nil {
+		return eventPayload, err
+	}
+
+	err = json.Unmarshal(data, &eventPayload)
+	if err != nil {
+		return eventPayload, err
+	}
+
+	return eventPayload, nil
 }
 
 func main() {

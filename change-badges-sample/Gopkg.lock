@@ -30,6 +30,14 @@
   version = "v1.8.2"
 
 [[projects]]
+  digest = "1:ffe9824d294da03b391f44e1ae8281281b4afc1bdaa9588c9097785e3af10cec"
+  name = "github.com/davecgh/go-spew"
+  packages = ["spew"]
+  pruneopts = "UT"
+  revision = "8991bc29aa16c548c550c7ff78260e27b9ab7c73"
+  version = "v1.1.1"
+
+[[projects]]
   digest = "1:5d1b5a25486fc7d4e133646d834f6fca7ba1cef9903d40e7aa786c41b89e9e91"
   name = "github.com/golang/protobuf"
   packages = [
@@ -53,6 +61,38 @@
   version = "v2.0.3"
 
 [[projects]]
+  digest = "1:31e761d97c76151dde79e9d28964a812c46efc5baee4085b86f68f0c654450de"
+  name = "github.com/konsorten/go-windows-terminal-sequences"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "f55edac94c9bbba5d6182a4be46d86a2c9b5b50e"
+  version = "v1.0.2"
+
+[[projects]]
+  digest = "1:0028cb19b2e4c3112225cd871870f2d9cf49b9b4276531f03438a88e94be86fe"
+  name = "github.com/pmezard/go-difflib"
+  packages = ["difflib"]
+  pruneopts = "UT"
+  revision = "792786c7400a136282c1664665ae0a8db921c6c2"
+  version = "v1.0.0"
+
+[[projects]]
+  digest = "1:87c2e02fb01c27060ccc5ba7c5a407cc91147726f8f40b70cceeedbc52b1f3a8"
+  name = "github.com/sirupsen/logrus"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "e1e72e9de974bd926e5c56f83753fba2df402ce5"
+  version = "v1.3.0"
+
+[[projects]]
+  digest = "1:972c2427413d41a1e06ca4897e8528e5a1622894050e2f527b38ddf0f343f759"
+  name = "github.com/stretchr/testify"
+  packages = ["assert"]
+  pruneopts = "UT"
+  revision = "ffdc059bfe9ce6a4e144ba849dbedead332c6053"
+  version = "v1.3.0"
+
+[[projects]]
   digest = "1:785adacba41666eb1de74447b5538476b9a9da178bd7d15ba3aeb2879ed07ed3"
   name = "go.opencensus.io"
   packages = [
@@ -74,6 +114,14 @@
   pruneopts = "UT"
   revision = "2b5032d79456124f42db6b7eb19ac6c155449dc2"
   version = "v0.19.0"
+
+[[projects]]
+  branch = "master"
+  digest = "1:058e9504b9a79bfe86092974d05bb3298d2aa0c312d266d43148de289a5065d9"
+  name = "golang.org/x/crypto"
+  packages = ["ssh/terminal"]
+  pruneopts = "UT"
+  revision = "31a38585487a4b1fd6ff4f8f3db26f1fb296ac82"
 
 [[projects]]
   branch = "master"
@@ -108,9 +156,12 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:969c44c96e9866e912a16e282a362cf045b64202107424983fe8abc3373d1eab"
+  digest = "1:a1914323eabb0da3b4392fb0d34b1ae5b6b531323daf4eeddc355d8000982052"
   name = "golang.org/x/sys"
-  packages = ["unix"]
+  packages = [
+    "unix",
+    "windows",
+  ]
   pruneopts = "UT"
   revision = "41f3e6584952bb034a481797859f6ab34b6803bd"
 
@@ -234,6 +285,8 @@
   input-imports = [
     "cloud.google.com/go/storage",
     "github.com/aws/aws-lambda-go/lambda",
+    "github.com/sirupsen/logrus",
+    "github.com/stretchr/testify/assert",
   ]
   solver-name = "gps-cdcl"
   solver-version = 1
