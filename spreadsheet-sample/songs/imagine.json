@@ -1,0 +1,4 @@
+{
+    "Artist": {"S": "John Lennon"},
+    "SongTitle": {"S": "Imagine"}
+}
